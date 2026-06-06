@@ -123,7 +123,7 @@ USE_TZ = True
 
 STATIC_URL = 'static/'
 
-# core/settings.py
+
 
 
 MEDIA_URL = '/media/'
@@ -131,3 +131,8 @@ MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 
 LOGIN_REDIRECT_URL = 'product_list'
 LOGOUT_REDIRECT_URL = 'product_list'
+EMAIL_BACKEND = 'django.core.mail.backends.filebased.EmailBackend'
+EMAIL_FILE_PATH = os.path.join(BASE_DIR, 'sent_emails')
+
+# Email отправителя по умолчанию
+DEFAULT_FROM_EMAIL = 'shop@portative.by'

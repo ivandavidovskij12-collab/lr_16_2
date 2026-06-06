@@ -65,6 +65,9 @@
                 </tr>
             </tbody>
         </table>
+        <div style="text-align: right; margin-top: 20px;">
+    <a href="{% url 'checkout' %}" style="display: inline-block; background: #007bff; color: white; padding: 12px 25px; text-decoration: none; border-radius: 4px; font-size: 1.1em; font-weight: bold;">Перейти к оформлению заказа &rarr;</a>
+</div>
     {% else %}
         <p style="margin-top: 20px; font-size: 1.1em; color: #555;">Ваша корзина пока пуста.</p>
     {% endif %}

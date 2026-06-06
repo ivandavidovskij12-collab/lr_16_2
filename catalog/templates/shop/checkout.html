@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <title>Оформление заказа</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 40px; background-color: #f9f9f9; }
+        .checkout-container { background: #fff; padding: 25px; border-radius: 8px; border: 1px solid #ddd; max-width: 600px; box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
+        .form-group { margin-bottom: 20px; }
+        label { display: block; font-weight: bold; margin-bottom: 8px; }
+        textarea { width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box; }
+        .btn-confirm { background: #28a745; color: white; border: none; padding: 12px 20px; border-radius: 4px; font-size: 1.1em; cursor: pointer; width: 100%; }
+        .btn-confirm:hover { background: #218838; }
+        .summary { background: #f4f4f4; padding: 15px; border-radius: 4px; margin-bottom: 20px; }
+        .messages { color: red; font-weight: bold; margin-bottom: 15px; }
+    </style>
+</head>
+<body>
+
+    <div class="checkout-container">
+        <h1>Оформление заказа</h1>
+        <a href="{% url 'cart_view' %}">&larr; Вернуться в корзину</a>
+        <br><br>
+
+        {% if messages %}
+            <div class="messages">
+                {% for message in messages %}
+                    <p>{{ message }}</p>
+                {% endfor %}
+            </div>
+        {% endif %}
+
+        <div class="summary">
+            <h3>Ваш заказ:</h3>
+            <ul>
+                {% for item in cart.items.all %}
+                    <li>{{ item.product.name }} — {{ item.quantity }} шт. ({{ item.item_price }} руб.)</li>
+                {% endfor %}
+            </ul>
+            <p><b>Итого к оплате: {{ cart.total_price }} руб.</b></p>
+        </div>
+
+        <form method="post" action="{% url 'checkout' %}">
+            {% csrf_token %}
+            <div class="form-group">
+                <label for="address">Адрес доставки:</label>
+                <textarea id="address" name="address" rows="4" placeholder="Введите ваш точный адрес для доставки гаджетов..." required></textarea>
+            </div>
+            <button type="submit" class="btn-confirm">Подтвердить и получить чек</button>
+        </form>
+    </div>
+
+</body>
+</html>

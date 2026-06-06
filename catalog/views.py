@@ -1,11 +1,94 @@
 # catalog/views.py
-from django.http import HttpResponse
+import io
 from django.shortcuts import render, get_object_or_404, redirect
+from django.http import HttpResponse                    # Для строк 99, 108, 118
+from django.db.models import Q                          # Для строки 133
 from django.contrib.auth.decorators import login_required
-from django.db.models import Q
 from django.contrib import messages
 from .models import Product, Category, Manufacturer, Cart, CartItem
+from openpyxl import Workbook           # Уберет ошибку со строки 27 ("Workbook")
+from django.core.mail import EmailMessage  # Уберет ошибку со строки 67 ("EmailMessage")
+from django.conf import settings  
+@login_required
+def checkout(request):
+    """Оформление заказа, генерация Excel-чека и отправка по Email."""
+    cart, created = Cart.objects.get_or_create(user=request.user)
+    cart_items = cart.items.all()
 
+    # Если корзина пуста, оформлять заказ нельзя
+    if not cart_items:
+        messages.error(request, "Ваша корзина пуста. Нечего оформлять!")
+        return redirect('cart_view')
+
+    if request.method == 'POST':
+        address = request.POST.get('address', '').strip()
+        if not address:
+            messages.error(request, "Пожалуйста, укажите адрес доставки.")
+            return render(request, 'shop/checkout.html', {'cart': cart})
+
+        # 1. ГЕНЕРАЦИЯ ЧЕКА В ФОРМАТЕ EXCEL
+        wb = Workbook()
+        ws = wb.active
+        ws.title = "Чек заказа"
+
+        # Стилизация структуры таблицы чека
+        ws['A1'] = f"ЧЕК ЗАКАЗА ДЛЯ ПОЛЬЗОВАТЕЛЯ: {request.user.username}"
+        ws['A2'] = f"Адрес доставки: {address}"
+        ws['A4'] = "Товар"
+        ws['B4'] = "Цена за ед."
+        ws['C4'] = "Количество"
+        ws['D4'] = "Итоговая стоимость"
+
+        row = 5
+        for item in cart_items:
+            ws.cell(row=row, column=1, value=item.product.name)
+            ws.cell(row=row, column=2, value=float(item.product.price))
+            ws.cell(row=row, column=3, value=item.quantity)
+            ws.cell(row=row, column=4, value=float(item.item_price))
+            row += 1
+
+        ws.cell(row=row+1, column=3, value="ИТОГО К ОПЛАТЕ:")
+        ws.cell(row=row+1, column=4, value=float(cart.total_price))
+
+        # Сохраняем Excel-файл в буфер памяти, чтобы не засорять диск
+        excel_buffer = io.BytesIO()
+        wb.save(excel_buffer)
+        excel_buffer.seek(0)
+
+        # 2. ОТПРАВКА ЧЕКА ПО ЭЛЕКТРОННОЙ ПОЧТЕ
+        user_email = request.user.email if request.user.email else f"{request.user.username}@example.com"
+        
+        subject = f"Ваш заказ в Portative Shop успешно оформлен!"
+        body = (
+            f"Здравствуйте, {request.user.username}!\n\n"
+            f"Благодарим за заказ в нашем магазине портативных гаджетов.\n"
+            f"Детализированный товарный чек находится во вложении к этому письму.\n\n"
+            f"Служба поддержки Portative Shop."
+        )
+
+        # Используем EmailMessage для возможности прикрепления файлов
+        email = EmailMessage(
+            subject=subject,
+            body=body,
+            from_email=settings.DEFAULT_FROM_EMAIL,
+            to=[user_email],
+        )
+        
+        # Прикрепляем сгенерированный Excel-файл из памяти
+        email.attach(
+            filename=f"receipt_order_{request.user.id}.xlsx",
+            content=excel_buffer.getvalue(),
+            mimetype="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+        )
+        email.send()
+
+        # 3. ОЧИСТКА КОРЗИНЫ ПОСЛЕ УСПЕШНОГО ОФОРМЛЕНИЯ
+        cart_items.delete()
+
+        messages.success(request, f"Заказ успешно оформлен! Чек отправлен на почту {user_email}.")
+        return redirect('product_list')
+
+    return render(request, 'shop/checkout.html', {'cart': cart})
 def home_view(request):
     text = (
         "Главная страница магазина портативных гаджетов\n\n"

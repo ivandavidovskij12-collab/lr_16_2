@@ -7,6 +7,7 @@ urlpatterns = [
     path('', views.home_view, name='home'),
     path('about/', views.about_view, name='about'),
     path('author/', views.author_view, name='author'),
+    path('checkout/', views.checkout, name='checkout'),
 
     # Каталог и товары из второй части
     path('catalog/', views.product_list, name='product_list'),
