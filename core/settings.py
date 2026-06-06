@@ -38,8 +38,9 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
-    
+    'rest_framework',
     'catalog',
+
 ]
 
 MIDDLEWARE = [
@@ -136,3 +137,16 @@ EMAIL_FILE_PATH = os.path.join(BASE_DIR, 'sent_emails')
 
 # Email отправителя по умолчанию
 DEFAULT_FROM_EMAIL = 'shop@portative.by'
+
+
+REST_FRAMEWORK = {
+    # Глобальное требование авторизации для всех эндпоинтов API
+    'DEFAULT_PERMISSION_CLASSES': [
+        'rest_framework.permissions.IsAuthenticated',
+    ],
+    # Использование сессий (для тестирования в браузере) и базовой авторизации (для Postman)
+    'DEFAULT_AUTHENTICATION_CLASSES': [
+        'rest_framework.authentication.SessionAuthentication',
+        'rest_framework.authentication.BasicAuthentication',
+    ],
+}

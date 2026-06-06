@@ -9,6 +9,8 @@ from .models import Product, Category, Manufacturer, Cart, CartItem
 from openpyxl import Workbook           # Уберет ошибку со строки 27 ("Workbook")
 from django.core.mail import EmailMessage  # Уберет ошибку со строки 67 ("EmailMessage")
 from django.conf import settings  
+from rest_framework import viewsets
+from .serializers import CategorySerializer, ManufacturerSerializer, ProductSerializer, CartSerializer, CartItemSerializer
 @login_required
 def checkout(request):
     """Оформление заказа, генерация Excel-чека и отправка по Email."""
@@ -227,3 +229,32 @@ def remove_from_cart(request, item_id):
     cart_item.delete()
     messages.success(request, "Товар удален из корзины.")
     return redirect('cart_view')
+class CategoryViewSet(viewsets.ModelViewSet):
+    queryset = Category.objects.all()
+    serializer_class = CategorySerializer
+
+
+class ManufacturerViewSet(viewsets.ModelViewSet):
+    queryset = Manufacturer.objects.all()
+    serializer_class = ManufacturerSerializer
+
+
+class ProductViewSet(viewsets.ModelViewSet):
+    queryset = Product.objects.all()
+    serializer_class = ProductSerializer
+
+
+class CartViewSet(viewsets.ModelViewSet):
+    queryset = Cart.objects.all()
+    serializer_class = CartSerializer
+
+    def get_queryset(self):
+        # Ограничиваем обычных пользователей просмотром только их собственной корзины
+        if self.request.user.is_staff:
+            return Cart.objects.all()
+        return Cart.objects.filter(user=self.request.user)
+
+
+class CartItemViewSet(viewsets.ModelViewSet):
+    queryset = CartItem.objects.all()
+    serializer_class = CartItemSerializer
