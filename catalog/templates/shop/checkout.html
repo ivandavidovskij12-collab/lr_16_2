@@ -1,54 +1,98 @@
-<!DOCTYPE html>
-<html lang="ru">
-<head>
-    <meta charset="UTF-8">
-    <title>Оформление заказа</title>
-    <style>
-        body { font-family: Arial, sans-serif; margin: 40px; background-color: #f9f9f9; }
-        .checkout-container { background: #fff; padding: 25px; border-radius: 8px; border: 1px solid #ddd; max-width: 600px; box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
-        .form-group { margin-bottom: 20px; }
-        label { display: block; font-weight: bold; margin-bottom: 8px; }
-        textarea { width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box; }
-        .btn-confirm { background: #28a745; color: white; border: none; padding: 12px 20px; border-radius: 4px; font-size: 1.1em; cursor: pointer; width: 100%; }
-        .btn-confirm:hover { background: #218838; }
-        .summary { background: #f4f4f4; padding: 15px; border-radius: 4px; margin-bottom: 20px; }
-        .messages { color: red; font-weight: bold; margin-bottom: 15px; }
-    </style>
-</head>
-<body>
+{% extends 'base.html' %}
+{% load static %}
 
-    <div class="checkout-container">
-        <h1>Оформление заказа</h1>
-        <a href="{% url 'cart_view' %}">&larr; Вернуться в корзину</a>
-        <br><br>
+{% block title %}Оформление заказа - Portative Shop{% endblock %}
 
-        {% if messages %}
-            <div class="messages">
-                {% for message in messages %}
-                    <p>{{ message }}</p>
-                {% endfor %}
+{% block content %}
+<div class="container">
+    <h1 class="mb-4">📝 Оформление заказа</h1>
+    
+    <div class="row">
+        <div class="col-md-7">
+            <div class="card shadow-sm">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0">Данные для доставки</h5>
+                </div>
+                <div class="card-body">
+                    <form method="post">
+                        {% csrf_token %}
+                        <div class="mb-3">
+                            <label for="address" class="form-label">Адрес доставки *</label>
+                            <textarea class="form-control" id="address" name="address" rows="3" 
+                                      placeholder="г. Минск, ул. Примерная, д. 123, кв. 45" required></textarea>
+                            <div class="form-text">Укажите город, улицу, дом и квартиру</div>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label class="form-label">Способ оплаты</label>
+                            <div class="form-check">
+                                <input class="form-check-input" type="radio" name="payment" id="card" checked>
+                                <label class="form-check-label" for="card">
+                                    <i class="fas fa-credit-card"></i> Банковская карта (онлайн)
+                                </label>
+                            </div>
+                            <div class="form-check">
+                                <input class="form-check-input" type="radio" name="payment" id="cash">
+                                <label class="form-check-label" for="cash">
+                                    <i class="fas fa-money-bill"></i> Наличными при получении
+                                </label>
+                            </div>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label class="form-label">Способ доставки</label>
+                            <div class="form-check">
+                                <input class="form-check-input" type="radio" name="delivery" id="courier" checked>
+                                <label class="form-check-label" for="courier">
+                                    <i class="fas fa-truck"></i> Курьером по Минску (бесплатно)
+                                </label>
+                            </div>
+                            <div class="form-check">
+                                <input class="form-check-input" type="radio" name="delivery" id="pickup">
+                                <label class="form-check-label" for="pickup">
+                                    <i class="fas fa-store"></i> Самовывоз (г. Минск, пр. Независимости, 123)
+                                </label>
+                            </div>
+                        </div>
+                        
+                        <button type="submit" class="btn btn-success btn-lg w-100">
+                            <i class="fas fa-check-circle"></i> Подтвердить заказ
+                        </button>
+                    </form>
+                </div>
             </div>
-        {% endif %}
-
-        <div class="summary">
-            <h3>Ваш заказ:</h3>
-            <ul>
-                {% for item in cart.items.all %}
-                    <li>{{ item.product.name }} — {{ item.quantity }} шт. ({{ item.item_price }} руб.)</li>
-                {% endfor %}
-            </ul>
-            <p><b>Итого к оплате: {{ cart.total_price }} руб.</b></p>
         </div>
-
-        <form method="post" action="{% url 'checkout' %}">
-            {% csrf_token %}
-            <div class="form-group">
-                <label for="address">Адрес доставки:</label>
-                <textarea id="address" name="address" rows="4" placeholder="Введите ваш точный адрес для доставки гаджетов..." required></textarea>
+        
+        <div class="col-md-5">
+            <div class="card shadow-sm">
+                <div class="card-header bg-dark text-white">
+                    <h5 class="mb-0">Ваш заказ</h5>
+                </div>
+                <div class="card-body">
+                    {% for item in cart.items.all %}
+                    <div class="d-flex justify-content-between mb-2">
+                        <span>{{ item.product.name }} × {{ item.quantity }}</span>
+                        <span>{{ item.item_price|floatformat:2 }} Br</span>
+                    </div>
+                    {% endfor %}
+                    <hr>
+                    <div class="d-flex justify-content-between fw-bold fs-5">
+                        <span>Итого:</span>
+                        <span class="text-primary">{{ cart.total_price|floatformat:2 }} Br</span>
+                    </div>
+                </div>
             </div>
-            <button type="submit" class="btn-confirm">Подтвердить и получить чек</button>
-        </form>
+            
+            <div class="card mt-3 shadow-sm">
+                <div class="card-body">
+                    <h6><i class="fas fa-info-circle"></i> Информация</h6>
+                    <small class="text-muted">
+                        После оформления заказа вы получите чек на электронную почту.<br>
+                        Доставка осуществляется в течение 1-3 дней.
+                    </small>
+                </div>
+            </div>
+        </div>
     </div>
-
-</body>
-</html>
+</div>
+{% endblock %}

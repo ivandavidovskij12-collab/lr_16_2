@@ -1,0 +1,170 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Portative Shop - Гаджеты в Беларуси{% endblock %}
+
+{% block content %}
+<!-- Hero секция -->
+<div class="hero-section bg-primary text-white py-5 mb-5" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
+    <div class="container">
+        <div class="row align-items-center">
+            <div class="col-md-8">
+                <h1 class="display-4 fw-bold">Аксессуары для телефона и гаджеты</h1>
+                <p class="lead mt-3">
+                    Оригинальные смартфоны, умные часы и аудиосистемы с официальной гарантией.
+                    Доставка по всей Беларуси!
+                </p>
+                <a href="{% url 'product_list' %}" class="btn btn-light btn-lg mt-3">
+                    Перейти в каталог товаров →
+                </a>
+            </div>
+            <div class="col-md-4 text-center">
+                <i class="fas fa-gift fa-5x"></i>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Секция популярных товаров -->
+<div class="featured-products mb-5">
+    <div class="container">
+        <h2 class="text-center mb-4">Портатив рекомендует</h2>
+        <div class="row">
+            {% for product in popular_products %}
+            <div class="col-md-4 mb-4">
+                <div class="card h-100 shadow-sm product-card">
+                    <!-- Иконка вместо картинки -->
+                    <div class="card-img-top bg-light d-flex align-items-center justify-content-center" style="height: 200px;">
+                        {% if 'телефон' in product.name|lower or 'смартфон' in product.name|lower or 'iphone' in product.name|lower or 'galaxy' in product.name|lower or 'redmi' in product.name|lower %}
+                            <i class="fas fa-mobile-alt fa-5x text-primary"></i>
+                        {% elif 'наушники' in product.name|lower or 'airpods' in product.name|lower or 'freebuds' in product.name|lower %}
+                            <i class="fas fa-headphones fa-5x text-primary"></i>
+                        {% elif 'часы' in product.name|lower or 'watch' in product.name|lower %}
+                            <i class="fas fa-clock fa-5x text-primary"></i>
+                        {% elif 'планшет' in product.name|lower or 'tab' in product.name|lower or 'pad' in product.name|lower %}
+                            <i class="fas fa-tablet-alt fa-5x text-primary"></i>
+                        {% elif 'стекло' in product.name|lower or 'чехол' in product.name|lower %}
+                            <i class="fas fa-shield-alt fa-5x text-primary"></i>
+                        {% else %}
+                            <i class="fas fa-microchip fa-5x text-primary"></i>
+                        {% endif %}
+                    </div>
+                    <div class="card-body">
+                        {% if product.is_new %}
+                        <span class="badge bg-danger mb-2">Новинка 🔥</span>
+                        {% endif %}
+                        <h5 class="card-title">{{ product.name }}</h5>
+                        {% if product.manufacturer %}
+                        <p class="card-text text-muted small">
+                            <i class="fas fa-tag"></i> {{ product.manufacturer.name }}
+                        </p>
+                        {% endif %}
+                        <p class="card-text h4 text-primary">{{ product.price|floatformat:2 }} Br</p>
+                        {% if product.stock_quantity > 0 %}
+                        <span class="badge bg-success">✅ В наличии</span>
+                        {% else %}
+                        <span class="badge bg-danger">❌ Нет в наличии</span>
+                        {% endif %}
+                    </div>
+                    <div class="card-footer bg-white border-top-0">
+                        <a href="{% url 'product_detail' product.id %}" class="btn btn-outline-primary w-100">
+                            Подробнее →
+                        </a>
+                    </div>
+                </div>
+            </div>
+            {% empty %}
+            <div class="col-12">
+                <div class="alert alert-info text-center">
+                    <i class="fas fa-info-circle"></i> Товары добавляются...
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+</div>
+
+<!-- Секция категорий -->
+<div class="categories-section mb-5">
+    <div class="container">
+        <h2 class="text-center mb-4">Категории товаров</h2>
+        <div class="row g-3">
+            {% for category in categories %}
+            <div class="col-md-3 col-sm-6">
+                <a href="{% url 'product_list' %}?category={{ category.id }}" class="text-decoration-none">
+                    <div class="card text-center h-100 shadow-sm category-card">
+                        <div class="card-body">
+                            {% if 'Смартфоны' in category.name %}
+                                <i class="fas fa-mobile-alt fa-2x mb-2 text-primary"></i>
+                            {% elif 'Наушники' in category.name %}
+                                <i class="fas fa-headphones fa-2x mb-2 text-primary"></i>
+                            {% elif 'Часы' in category.name %}
+                                <i class="fas fa-clock fa-2x mb-2 text-primary"></i>
+                            {% elif 'Планшеты' in category.name %}
+                                <i class="fas fa-tablet-alt fa-2x mb-2 text-primary"></i>
+                            {% elif 'Аксессуары' in category.name %}
+                                <i class="fas fa-shield-alt fa-2x mb-2 text-primary"></i>
+                            {% else %}
+                                <i class="fas fa-tag fa-2x mb-2 text-primary"></i>
+                            {% endif %}
+                            <h6 class="card-title mb-0">{{ category.name }}</h6>
+                            <small class="text-muted">
+                                <i class="fas fa-box"></i> {{ category.products.count }} товаров
+                            </small>
+                        </div>
+                    </div>
+                </a>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+</div>
+
+<!-- Секция преимуществ -->
+<div class="advantages mb-5">
+    <div class="container">
+        <div class="row text-center">
+            <div class="col-md-3 mb-3">
+                <i class="fas fa-shipping-fast fa-3x text-primary"></i>
+                <h6 class="mt-2">Быстрая доставка</h6>
+                <small class="text-muted">по Минску и всей РБ</small>
+            </div>
+            <div class="col-md-3 mb-3">
+                <i class="fas fa-shield-alt fa-3x text-primary"></i>
+                <h6 class="mt-2">Гарантия качества</h6>
+                <small class="text-muted">официальная гарантия</small>
+            </div>
+            <div class="col-md-3 mb-3">
+                <i class="fas fa-credit-card fa-3x text-primary"></i>
+                <h6 class="mt-2">Удобная оплата</h6>
+                <small class="text-muted">картой или наличными</small>
+            </div>
+            <div class="col-md-3 mb-3">
+                <i class="fas fa-headset fa-3x text-primary"></i>
+                <h6 class="mt-2">Поддержка 24/7</h6>
+                <small class="text-muted">поможем с выбором</small>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .category-card {
+        transition: transform 0.3s ease;
+        cursor: pointer;
+    }
+    .category-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 4px 15px rgba(0,0,0,0.1) !important;
+    }
+    .hero-section {
+        border-radius: 0 0 30px 30px;
+    }
+    .product-card {
+        transition: transform 0.3s ease;
+    }
+    .product-card:hover {
+        transform: translateY(-5px);
+    }
+</style>
+{% endblock %}
