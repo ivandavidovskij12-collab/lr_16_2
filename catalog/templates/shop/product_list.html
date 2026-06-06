@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <title>Каталог гаджетов</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 30px; background-color: #f9f9f9; }
+        .filters { background: #fff; padding: 15px; border-radius: 5px; margin-bottom: 20px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
+        .product-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); gap: 20px; }
+        .product-card { background: #fff; padding: 15px; border: 1px solid #ddd; border-radius: 5px; text-align: center; box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
+        .product-card img { max-width: 100%; height: 150px; object-fit: contain; }
+        .price { font-weight: bold; color: #e44d26; font-size: 1.2em; margin: 10px 0; }
+        .btn { display: inline-block; background: #007bff; color: #fff; padding: 8px 15px; text-decoration: none; border-radius: 3px; }
+        .btn-cart { background: #28a745; }
+        .messages { color: green; font-weight: bold; margin-bottom: 15px; }
+        .error { color: red; }
+    </style>
+</head>
+<body>
+
+    <h1>Магазин портативных гаджетов</h1>
+    
+    <!-- Ссылка на корзину / авторизацию -->
+    <p>
+        {% if user.is_authenticated %}
+            Привет, <b>{{ user.username }}</b>! | <a href="{% url 'cart_view' %}">Перейти в корзину</a>
+        {% else %}
+            Вы не авторизованы. <a href="/accounts/login/">Войти</a>
+        {% endif %}
+    </p>
+
+    <!-- Вывод уведомлений (Messages framework) -->
+    {% if messages %}
+        <div class="messages">
+            {% for message in messages %}
+                <p class="{% if message.tags %}{{ message.tags }}{% endif %}">{{ message }}</p>
+            {% endfor %}
+        </div>
+    {% endif %}
+
+    <!-- Блок фильтрации и поиска -->
+    <div class="filters">
+        <form method="get" action="{% url 'product_list' %}">
+            <input type="text" name="search" placeholder="Поиск товара..." value="{{ search_query }}">
+            
+            <select name="category">
+                <option value="">Все категории</option>
+                {% for cat in categories %}
+                    <option value="{{ cat.id }}" {% if selected_category == cat.id|stringformat:"s" %}selected{% endif %}>{{ cat.name }}</option>
+                {% endfor %}
+            </select>
+
+            <select name="manufacturer">
+                <option value="">Все производители</option>
+                {% for man in manufacturers %}
+                    <option value="{{ man.id }}" {% if selected_manufacturer == man.id|stringformat:"s" %}selected{% endif %}>{{ man.name }}</option>
+                {% endfor %}
+            </select>
+
+            <button type="submit">Применить</button>
+            <a href="{% url 'product_list' %}">Сбросить</a>
+        </form>
+    </div>
+
+    <!-- Сетка товаров -->
+    <div class="product-grid">
+        {% for product in products %}
+            <div class="product-card">
+                {% if product.image %}
+                    <img src="{{ product.image.url }}" alt="{{ product.name }}">
+                {% else %}
+                    <div style="height: 150px; background: #eee; display: flex; align-items: center; justify-content: center;">Нет фото</div>
+                {% endif %}
+                <h3><a href="{% url 'product_detail' product.id %}">{{ product.name }}</a></h3>
+                <p>Остаток: {{ product.stock_quantity }} шт.</p>
+                <div class="price">{{ product.price }} руб.</div>
+                <a href="{% url 'add_to_cart' product.id %}" class="btn btn-cart">В корзину</a>
+            </div>
+        {% empty %}
+            <p>Товары не найдены.</p>
+        {% endfor %}
+    </div>
+
+</body>
+</html>

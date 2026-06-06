@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <title>{{ product.name }}</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 40px; line-height: 1.6; }
+        .product-container { display: flex; gap: 40px; background: #fff; padding: 20px; border: 1px solid #ddd; border-radius: 8px; }
+        .product-image img { max-width: 350px; max-height: 400px; object-fit: contain; }
+        .price { font-size: 1.5em; color: #e44d26; font-weight: bold; margin: 15px 0; }
+        .btn { display: inline-block; background: #28a745; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px; font-size: 1.1em; }
+        .back-link { display: inline-block; margin-bottom: 20px; }
+    </style>
+</head>
+<body>
+
+    <a href="{% url 'product_list' %}" class="back-link">&larr; Вернуться в каталог</a>
+
+    <div class="product-container">
+        <div class="product-image">
+            {% if product.image %}
+                <img src="{{ product.image.url }}" alt="{{ product.name }}">
+            {% else %}
+                <div style="width: 300px; height: 300px; background: #eee; display: flex; align-items: center; justify-content: center;">Нет фото</div>
+            {% endif %}
+        </div>
+        <div class="product-info">
+            <h1>{{ product.name }}</h1>
+            <p><b>Категория:</b> {{ product.category.name }}</p>
+            <p><b>Производитель:</b> {{ product.manufacturer.name }} ({{ product.manufacturer.country }})</p>
+            <p><b>В наличии на складе:</b> {{ product.stock_quantity }} шт.</p>
+            <p><b>Описание:</b><br>{{ product.description }}</p>
+            <div class="price">{{ product.price }} руб.</div>
+            <a href="{% url 'add_to_cart' product.id %}" class="btn">Добавить в корзину</a>
+        </div>
+    </div>
+
+</body>
+</html>

@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <title>Моя корзина</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 40px; }
+        table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+        th, td { padding: 12px; border: 1px solid #ddd; text-align: left; }
+        th { background-color: #f4f4f4; }
+        .total-row { font-weight: bold; font-size: 1.2em; background: #f9f9f9; }
+        .btn-danger { color: red; text-decoration: none; font-weight: bold; }
+        .messages { color: green; font-weight: bold; margin-bottom: 15px; }
+        .error { color: red; }
+    </style>
+</head>
+<body>
+
+    <h1>Ваша корзина</h1>
+    <a href="{% url 'product_list' %}">&larr; Вернуться к покупкам</a>
+
+    {% if messages %}
+        <div class="messages">
+            {% for message in messages %}
+                <p class="{% if message.tags %}{{ message.tags }}{% endif %}">{{ message }}</p>
+            {% endfor %}
+        </div>
+    {% endif %}
+
+    {% if cart.items.all %}
+        <table>
+            <thead>
+                <tr>
+                    <th>Товар</th>
+                    <th>Цена за ед.</th>
+                    <th>Количество</th>
+                    <th>Стоимость позиции</th>
+                    <th>Действие</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for item in cart.items.all %}
+                <tr>
+                    <td><a href="{% url 'product_detail' item.product.id %}">{{ item.product.name }}</a></td>
+                    <td>{{ item.product.price }} руб.</td>
+                    <td>
+                        <!-- Форма изменения количества -->
+                        <form method="post" action="{% url 'update_cart' item.id %}" style="display: inline-block;">
+                            {% csrf_token %}
+                            <input type="number" name="quantity" value="{{ item.quantity }}" min="1" max="{{ item.product.stock_quantity }}" style="width: 60px;">
+                            <button type="submit">Обновить</button>
+                        </form>
+                        <small style="color: #666; display: block;">(Макс: {{ item.product.stock_quantity }})</small>
+                        Используйте код с осторожностью.
+                    </td>
+                    <td>{{ item.item_price }} руб.</td>
+                    <td>
+                        <a href="{% url 'remove_from_cart' item.id %}" class="btn-danger" onclick="return confirm('Удалить товар из корзины?')">Удалить</a>
+                    </td>
+                </tr>
+                {% endfor %}
+                <tr class="total-row">
+                    <td colspan="3" style="text-align: right;">Итого к оплате:</td>
+                    <td colspan="2">{{ cart.total_price }} руб.</td>
+                </tr>
+            </tbody>
+        </table>
+    {% else %}
+        <p style="margin-top: 20px; font-size: 1.1em; color: #555;">Ваша корзина пока пуста.</p>
+    {% endif %}
+
+</body>
+</html>
