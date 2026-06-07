@@ -8,73 +8,44 @@
     <div class="col-md-6">
         <div class="card shadow-sm">
             <div class="card-header bg-primary text-white text-center">
-                <h4 class="mb-0">
-                    <i class="fas fa-user-plus"></i> Регистрация
-                </h4>
+                <h4 class="mb-0"><i class="fas fa-user-plus"></i> Регистрация</h4>
             </div>
             <div class="card-body">
                 <form method="post">
                     {% csrf_token %}
-                    
-                    {% if form.errors %}
-                        <div class="alert alert-danger">
-                            <i class="fas fa-exclamation-triangle"></i> Пожалуйста, исправьте ошибки ниже:
-                            <ul class="mb-0 mt-2">
-                                {% for field in form %}
-                                    {% for error in field.errors %}
-                                        <li>{{ field.label }}: {{ error }}</li>
-                                    {% endfor %}
-                                {% endfor %}
-                            </ul>
-                        </div>
-                    {% endif %}
-                    
                     <div class="mb-3">
-                        <label for="id_username" class="form-label">
-                            <i class="fas fa-user"></i> Имя пользователя *
-                        </label>
-                        <input type="text" name="username" class="form-control" id="id_username" 
-                               value="{{ form.username.value|default:'' }}" required>
-                        <div class="form-text">Обязательное поле. Только буквы, цифры и @/./+/-/_.</div>
+                        <label class="form-label">Имя пользователя *</label>
+                        <input type="text" name="username" class="form-control" value="{{ form.username.value|default:'' }}" required>
                     </div>
-                    
                     <div class="mb-3">
-                        <label for="id_email" class="form-label">
-                            <i class="fas fa-envelope"></i> Email *
-                        </label>
-                        <input type="email" name="email" class="form-control" id="id_email" 
-                               value="{{ form.email.value|default:'' }}" required>
+                        <label class="form-label">Email *</label>
+                        <input type="email" name="email" class="form-control" value="{{ form.email.value|default:'' }}" required>
                     </div>
-                    
                     <div class="mb-3">
-                        <label for="id_password1" class="form-label">
-                            <i class="fas fa-lock"></i> Пароль *
-                        </label>
-                        <input type="password" name="password1" class="form-control" id="id_password1" required>
-                        <div class="form-text">Пароль должен содержать не менее 8 символов.</div>
+                        <label class="form-label">Полное имя</label>
+                        <input type="text" name="full_name" class="form-control" value="{{ form.full_name.value|default:'' }}">
                     </div>
-                    
                     <div class="mb-3">
-                        <label for="id_password2" class="form-label">
-                            <i class="fas fa-lock"></i> Подтверждение пароля *
-                        </label>
-                        <input type="password" name="password2" class="form-control" id="id_password2" required>
+                        <label class="form-label">Телефон</label>
+                        <input type="tel" name="phone" class="form-control" value="{{ form.phone.value|default:'' }}">
                     </div>
-                    
-                    <button type="submit" class="btn btn-primary w-100">
-                        <i class="fas fa-user-check"></i> Зарегистрироваться
-                    </button>
+                    <div class="mb-3">
+                        <label class="form-label">Город</label>
+                        <input type="text" name="city" class="form-control" value="{{ form.city.value|default:'' }}">
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Пароль *</label>
+                        <input type="password" name="password1" class="form-control" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Подтверждение пароля *</label>
+                        <input type="password" name="password2" class="form-control" required>
+                    </div>
+                    <button type="submit" class="btn btn-primary w-100">Зарегистрироваться</button>
                 </form>
-                
                 <hr>
-                
                 <div class="text-center">
-                    <p class="mb-0">
-                        Уже есть аккаунт? 
-                        <a href="{% url 'login' %}" class="text-decoration-none">
-                            <i class="fas fa-sign-in-alt"></i> Войдите
-                        </a>
-                    </p>
+                    <p class="mb-0">Уже есть аккаунт? <a href="{% url 'login' %}">Войдите</a></p>
                 </div>
             </div>
         </div>

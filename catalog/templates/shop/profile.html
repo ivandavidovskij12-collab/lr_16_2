@@ -1,0 +1,219 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Личный кабинет - Portative Shop{% endblock %}
+
+{% block content %}
+<div class="container">
+    <h1 class="mb-4">👤 Личный кабинет</h1>
+    
+    <div class="row">
+        <div class="col-md-3 mb-4">
+            <div class="list-group">
+                <a href="#" class="list-group-item list-group-item-action active" data-tab="profile">
+                    <i class="fas fa-user"></i> Профиль
+                </a>
+                <a href="#" class="list-group-item list-group-item-action" data-tab="orders">
+                    <i class="fas fa-shopping-bag"></i> Мои заказы
+                </a>
+            </div>
+        </div>
+        
+        <div class="col-md-9">
+            <div id="profile-tab" class="tab-content">
+                <div class="card shadow-sm">
+                    <div class="card-header bg-primary text-white">
+                        <h5 class="mb-0">Информация о профиле</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-4 text-center">
+                                <i class="fas fa-user-circle fa-5x text-primary mb-3"></i>
+                                <button class="btn btn-outline-primary btn-sm w-100" id="edit-profile-btn">
+                                    <i class="fas fa-edit"></i> Редактировать
+                                </button>
+                            </div>
+                            <div class="col-md-8">
+                                <div id="profile-view">
+                                    <p><strong>Имя пользователя:</strong> {{ user.username }}</p>
+                                    <p><strong>Email:</strong> {{ user.email }}</p>
+                                    <p><strong>Полное имя:</strong> {{ user.profile.full_name|default:"Не указано" }}</p>
+                                    <p><strong>Телефон:</strong> {{ user.profile.phone|default:"Не указан" }}</p>
+                                    <p><strong>Адрес:</strong> {{ user.profile.address|default:"Не указан" }}</p>
+                                    <p><strong>Город:</strong> {{ user.profile.city|default:"Не указан" }}</p>
+                                    <p><strong>Индекс:</strong> {{ user.profile.postal_code|default:"Не указан" }}</p>
+                                    <p><strong>Роль:</strong> 
+                                        <span class="badge {% if user.profile.role == 'admin' %}bg-danger{% elif user.profile.role == 'manager' %}bg-warning{% else %}bg-secondary{% endif %}">
+                                            {{ user.profile.get_role_display }}
+                                        </span>
+                                    </p>
+                                </div>
+                                
+                                <div id="profile-edit" style="display: none;">
+                                    <form id="profile-form">
+                                        {% csrf_token %}
+                                        <div class="mb-2">
+                                            <input type="text" class="form-control" id="edit-fullname" placeholder="Полное имя" value="{{ user.profile.full_name|default:'' }}">
+                                        </div>
+                                        <div class="mb-2">
+                                            <input type="tel" class="form-control" id="edit-phone" placeholder="Телефон" value="{{ user.profile.phone|default:'' }}">
+                                        </div>
+                                        <div class="mb-2">
+                                            <textarea class="form-control" id="edit-address" rows="2" placeholder="Адрес">{{ user.profile.address|default:'' }}</textarea>
+                                        </div>
+                                        <div class="mb-2">
+                                            <input type="text" class="form-control" id="edit-city" placeholder="Город" value="{{ user.profile.city|default:'' }}">
+                                        </div>
+                                        <div class="mb-2">
+                                            <input type="text" class="form-control" id="edit-postal" placeholder="Почтовый индекс" value="{{ user.profile.postal_code|default:'' }}">
+                                        </div>
+                                        <button type="submit" class="btn btn-primary btn-sm">Сохранить</button>
+                                        <button type="button" class="btn btn-secondary btn-sm" id="cancel-edit">Отмена</button>
+                                    </form>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div id="orders-tab" class="tab-content" style="display: none;">
+                <div class="card shadow-sm">
+                    <div class="card-header bg-dark text-white">
+                        <h5 class="mb-0">Мои заказы</h5>
+                    </div>
+                    <div class="card-body">
+                        <div id="orders-loading" class="text-center py-5">
+                            <div class="spinner-border text-primary"></div>
+                            <p class="mt-2">Загрузка заказов...</p>
+                        </div>
+                        <div id="orders-list" style="display: none;">
+                            <div class="table-responsive">
+                                <table class="table table-hover">
+                                    <thead>
+                                        <tr><th>ID</th><th>Дата</th><th>Сумма</th><th>Статус</th><th>Действие</th></tr>
+                                    </thead>
+                                    <tbody id="orders-table-body"></tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="order-modal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header bg-primary text-white">
+                <h5 class="modal-title">Детали заказа</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body" id="order-details"></div>
+        </div>
+    </div>
+</div>
+
+<script>
+    document.querySelectorAll('[data-tab]').forEach(tab => {
+        tab.addEventListener('click', (e) => {
+            e.preventDefault();
+            const tabName = tab.dataset.tab;
+            document.querySelectorAll('.tab-content').forEach(c => c.style.display = 'none');
+            document.getElementById(`${tabName}-tab`).style.display = 'block';
+            document.querySelectorAll('.list-group-item').forEach(i => i.classList.remove('active'));
+            tab.classList.add('active');
+            if (tabName === 'orders') loadOrders();
+        });
+    });
+    
+    document.getElementById('edit-profile-btn')?.addEventListener('click', () => {
+        document.getElementById('profile-view').style.display = 'none';
+        document.getElementById('profile-edit').style.display = 'block';
+    });
+    
+    document.getElementById('cancel-edit')?.addEventListener('click', () => {
+        document.getElementById('profile-view').style.display = 'block';
+        document.getElementById('profile-edit').style.display = 'none';
+    });
+    
+    document.getElementById('profile-form')?.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const data = {
+            full_name: document.getElementById('edit-fullname').value,
+            phone: document.getElementById('edit-phone').value,
+            address: document.getElementById('edit-address').value,
+            city: document.getElementById('edit-city').value,
+            postal_code: document.getElementById('edit-postal').value
+        };
+        try {
+            const response = await fetch('/api/users/me/', {
+                method: 'PATCH',
+                headers: {'Content-Type': 'application/json', 'X-CSRFToken': getCookie('csrftoken')},
+                body: JSON.stringify(data)
+            });
+            if (response.ok) {
+                window.location.reload();
+            } else {
+                showNotification('Ошибка при обновлении', 'danger');
+            }
+        } catch (error) {
+            showNotification('Ошибка соединения', 'danger');
+        }
+    });
+    
+    async function loadOrders() {
+        const loading = document.getElementById('orders-loading');
+        const list = document.getElementById('orders-list');
+        loading.style.display = 'block';
+        list.style.display = 'none';
+        try {
+            const response = await fetch('/api/orders/');
+            if (response.ok) {
+                const orders = await response.json();
+                const tbody = document.getElementById('orders-table-body');
+                if (orders.length === 0) {
+                    tbody.innerHTML = '<tr><td colspan="5" class="text-center">У вас пока нет заказов</td></tr>';
+                } else {
+                    tbody.innerHTML = orders.map(order => `
+                        <tr>
+                            <td>#${order.id}</td>
+                            <td>${new Date(order.created_at).toLocaleDateString()}</td>
+                            <td>${order.total_price} Br</td>
+                            <td><span class="badge bg-${order.status === 'delivered' ? 'success' : 'warning'}">${order.status_display}</span></td>
+                            <td><button class="btn btn-sm btn-info" onclick="showOrderDetails(${order.id})">Подробнее</button></td>
+                        </tr>
+                    `).join('');
+                }
+                loading.style.display = 'none';
+                list.style.display = 'block';
+            }
+        } catch (error) {
+            loading.style.display = 'none';
+            showNotification('Ошибка загрузки заказов', 'danger');
+        }
+    }
+    
+    async function showOrderDetails(orderId) {
+        const response = await fetch(`/api/orders/${orderId}/`);
+        if (response.ok) {
+            const order = await response.json();
+            const modal = new bootstrap.Modal(document.getElementById('order-modal'));
+            document.getElementById('order-details').innerHTML = `
+                <p><strong>Заказ #${order.id}</strong></p>
+                <p><strong>Дата:</strong> ${new Date(order.created_at).toLocaleString()}</p>
+                <p><strong>Адрес:</strong> ${order.address}</p>
+                <p><strong>Статус:</strong> ${order.status_display}</p>
+                <hr>
+                <table class="table table-sm"><thead><tr><th>Товар</th><th>Кол-во</th><th>Цена</th></tr></thead><tbody>
+                ${order.items.map(item => `<tr><td>${item.product_name}</td><td>${item.quantity}</td><td>${item.price} Br</td></tr>`).join('')}
+                </tbody></table>
+                <p class="fw-bold">Итого: ${order.total_price} Br</p>
+            `;
+            modal.show();
+        }
+    }
+</script>
+{% endblock %}

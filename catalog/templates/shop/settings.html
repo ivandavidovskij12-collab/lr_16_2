@@ -1,0 +1,130 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Настройки - Portative Shop{% endblock %}
+
+{% block content %}
+<div class="container">
+    <h1 class="mb-4">⚙️ Настройки</h1>
+    
+    <div class="row">
+        <div class="col-md-6">
+            <div class="card shadow-sm">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0">Смена пароля</h5>
+                </div>
+                <div class="card-body">
+                    <form id="password-form">
+                        {% csrf_token %}
+                        <div class="mb-3">
+                            <label class="form-label">Старый пароль</label>
+                            <input type="password" class="form-control" id="old-password" required>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Новый пароль</label>
+                            <input type="password" class="form-control" id="new-password" required>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Подтверждение</label>
+                            <input type="password" class="form-control" id="confirm-password" required>
+                        </div>
+                        <button type="submit" class="btn btn-primary w-100">Сменить пароль</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-6">
+            <div class="card shadow-sm">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0">Настройки профиля</h5>
+                </div>
+                <div class="card-body">
+                    <form id="preferences-form">
+                        {% csrf_token %}
+                        <div class="mb-3">
+                            <label class="form-label">Любимая категория</label>
+                            <select class="form-select" id="favorite-category">
+                                <option value="">-- Выберите --</option>
+                                {% for cat in categories %}
+                                <option value="{{ cat.id }}" {% if user.profile.favorite_category_id == cat.id %}selected{% endif %}>
+                                    {{ cat.name }}
+                                </option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Предпочитаемый способ оплаты</label>
+                            <select class="form-select" id="preferred-payment">
+                                <option value="">-- Выберите --</option>
+                                <option value="card" {% if user.profile.preferred_payment == 'card' %}selected{% endif %}>Банковская карта</option>
+                                <option value="cash" {% if user.profile.preferred_payment == 'cash' %}selected{% endif %}>Наличные</option>
+                                <option value="online" {% if user.profile.preferred_payment == 'online' %}selected{% endif %}>Онлайн-платеж</option>
+                            </select>
+                        </div>
+                        <div class="mb-3 form-check">
+                            <input type="checkbox" class="form-check-input" id="newsletter" {% if user.profile.receive_newsletter %}checked{% endif %}>
+                            <label class="form-check-label">Получать новости и акции</label>
+                        </div>
+                        <button type="submit" class="btn btn-primary w-100">Сохранить настройки</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    document.getElementById('password-form')?.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const newPass = document.getElementById('new-password').value;
+        const confirmPass = document.getElementById('confirm-password').value;
+        if (newPass !== confirmPass) {
+            showNotification('Пароли не совпадают', 'danger');
+            return;
+        }
+        try {
+            const response = await fetch('/api/users/change_password/', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json', 'X-CSRFToken': getCookie('csrftoken')},
+                body: JSON.stringify({
+                    old_password: document.getElementById('old-password').value,
+                    new_password: newPass
+                })
+            });
+            if (response.ok) {
+                showNotification('Пароль успешно изменен!', 'success');
+                document.getElementById('password-form').reset();
+            } else {
+                const data = await response.json();
+                showNotification(data.error || 'Ошибка', 'danger');
+            }
+        } catch (error) {
+            showNotification('Ошибка соединения', 'danger');
+        }
+    });
+    
+    document.getElementById('preferences-form')?.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const data = {
+            favorite_category: document.getElementById('favorite-category').value || null,
+            preferred_payment: document.getElementById('preferred-payment').value || null,
+            receive_newsletter: document.getElementById('newsletter').checked
+        };
+        try {
+            const response = await fetch('/api/users/me/', {
+                method: 'PATCH',
+                headers: {'Content-Type': 'application/json', 'X-CSRFToken': getCookie('csrftoken')},
+                body: JSON.stringify(data)
+            });
+            if (response.ok) {
+                showNotification('Настройки сохранены!', 'success');
+            } else {
+                showNotification('Ошибка при сохранении', 'danger');
+            }
+        } catch (error) {
+            showNotification('Ошибка соединения', 'danger');
+        }
+    });
+</script>
+{% endblock %}
