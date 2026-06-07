@@ -9,9 +9,7 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 SECRET_KEY = config('SECRET_KEY', default='django-insecure-default-key-for-dev')
 DEBUG = config('DEBUG', default=True, cast=bool)
 
-ALLOWED_HOSTS = config('ALLOWED_HOSTS', default='localhost,127.0.0.1').split(',')
-RAILWAY_HOSTS = ['.up.railway.app', '.railway.app']
-ALLOWED_HOSTS.extend(RAILWAY_HOSTS)
+ALLOWED_HOSTS = ['*']
 
 # ========== ПРИЛОЖЕНИЯ ==========
 INSTALLED_APPS = [
@@ -89,12 +87,12 @@ MEDIA_URL = '/media/'
 MEDIA_ROOT = BASE_DIR / 'media'
 
 # ========== БЕЗОПАСНОСТЬ ==========
-if not DEBUG:
-    SECURE_SSL_REDIRECT = True
-    SESSION_COOKIE_SECURE = True
-    CSRF_COOKIE_SECURE = True
-    SECURE_BROWSER_XSS_FILTER = True
-    SECURE_CONTENT_TYPE_NOSNIFF = True
+# Настройки для Railway (без принудительного HTTPS)
+SECURE_SSL_REDIRECT = False
+SESSION_COOKIE_SECURE = False
+CSRF_COOKIE_SECURE = False
+SECURE_BROWSER_XSS_FILTER = True
+SECURE_CONTENT_TYPE_NOSNIFF = True
 
 # ========== ЛОГИН ==========
 LOGIN_URL = 'login'
